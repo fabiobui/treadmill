@@ -22,5 +22,14 @@
         "port": 1883,
         "topic": "TREADMILL/back",
         "message": "switch_off"
+    },
+    "Database": {
+        "localfile": "ftms.db",
+        "Mysql": {
+            "host": "31.11.39.178",
+            "user": "ftms",
+            "password": "ftms",
+            "database": "ftms"
+        }
     }
 }
