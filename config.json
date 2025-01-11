@@ -1,5 +1,6 @@
 {
     "Settings": {
+        "device_name": "ORANGE-PI3-ZERO",
         "address": "FF:71:4E:77:4B:DB",
         "speed_characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
         "control_point_uuid": "00002ace-0000-1000-8000-00805f9b34fb",

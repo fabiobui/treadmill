@@ -46,7 +46,7 @@ os.environ["XAUTHORITY"] = env_vars["XAUTHORITY"]  # Set XAUTHORITY
 # Create a Flask app
 
 # Instantiate your treadmill simulator
-treadmill = TreadmillSimulate(device_name="ORANGE-PI3-ZERO")
+treadmill = TreadmillSimulate(device_name=settings["device_name"])
 
 
 # Instantiate the BLEConnection class using values from the config
