@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Speed</title>
+    <style>
+        .flashes { list-style-type: none; padding: 0; }
+        .flashes li { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .btn { padding: 10px 20px; border: none; cursor: pointer; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-lg { font-size: 1.25em; }
+    </style>
+</head>
+<body>
+    <h1>Set Speed</h1>
+    
+    <!-- Display flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    
+    <form action="{{ url_for('set_speed') }}" method="POST" name="set_speed_form">
+        <button type="submit" class="btn btn-success btn-lg">
+            <strong>6:30</strong>&nbsp;(9.2)
+        </button>
+        <input type="hidden" name="set_speed" value="9.2">
+    </form>
+    <form action="/set_speed" method="post" name="set_speed_form">
+        <button type="submit" class="btn btn-success btn-lg"><strong>6:30</strong>&nbsp;(9,2)</button>
+        <hidden name="set_speed" value="9.2">
+    </form>  
+</body>
+</html>

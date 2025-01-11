@@ -1,0 +1,25 @@
+{
+    "Settings": {
+        "address": "FF:71:4E:77:4B:DB",
+        "speed_characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
+        "control_point_uuid": "00002ace-0000-1000-8000-00805f9b34fb",
+        "max_retries": 5
+    },
+    "Limits": {
+        "speed_yellow": 9.6,
+        "speed_red": 10.9,
+        "bpm_yellow": 120,
+        "bpm_red": 140
+    },
+    "EnvironmentVariables": {
+        "PATH": "/usr/bin",  
+        "DISPLAY": ":0",     
+        "XAUTHORITY": "/home/orangepi/.Xauthority"  
+    },
+    "MQTT": {
+        "server": "192.168.1.22",
+        "port": 1883,
+        "topic": "TREADMILL/back",
+        "message": "switch_off"
+    }
+}
