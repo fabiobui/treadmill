@@ -13,11 +13,13 @@ import paho.mqtt.client as mqtt
 
 from flask import Flask, Response, request, redirect, url_for, jsonify, render_template
 
+from db_management import DBManagement
+
 # Import your TreadmillSimulate as before
 from ble_treadmill import TreadmillSimulate
 
 # Import the new BLEConnection class
-from ble_connection import BLEConnection, db_manager, app
+from ble_connection import BLEConnection
 
 
 # Load the JSON file
@@ -34,6 +36,12 @@ mqtt_broker = mqtt_settings["server"]
 mqtt_port = mqtt_settings["port"]
 mqtt_topic = mqtt_settings["topic"]
 mqtt_message = mqtt_settings["message"]
+
+app = Flask(__name__)
+
+
+# Instantiate the class
+db_manager = DBManagement(config["Database"])
 
 client = mqtt.Client()
 
@@ -52,6 +60,7 @@ treadmill = TreadmillSimulate(device_name=settings["device_name"])
 # Instantiate the BLEConnection class using values from the config
 ble_connection = BLEConnection(
     treadmill=treadmill,  # Assuming treadmill is already defined in your code
+    db_manager=db_manager,
     address=settings["address"],
     speed_characteristic_uuid=settings["speed_characteristic_uuid"],
     control_point_uuid=settings["control_point_uuid"],
