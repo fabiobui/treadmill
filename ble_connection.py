@@ -6,14 +6,6 @@ import struct
 from bleak import BleakClient
 from datetime import datetime, timedelta
 
-from db_management import DBManagement, local_db, LocalSession
-
-# Instantiate the class
-db_manager = DBManagement()
-
-# For convenience, get references
-app = db_manager.app
-
 class BLEConnection:
     """
     Encapsulates all BLE connection logic for treadmill data.
@@ -22,6 +14,7 @@ class BLEConnection:
     def __init__(
         self,
         treadmill,  # Pass your TreadmillSimulate instance
+        db_manager,  # Pass your DBManagement instance
         address="FF:71:4E:77:4B:DB",  # default treadmill MAC address
         speed_characteristic_uuid="00002acd-0000-1000-8000-00805f9b34fb",
         control_point_uuid = "00002ace-0000-1000-8000-00805f9b34fb",
@@ -34,6 +27,7 @@ class BLEConnection:
         }
     ):
         self.treadmill = treadmill
+        self.db_manager = db_manager
         self.address = address
         self.speed_characteristic_uuid = speed_characteristic_uuid
         self.control_point_uuid = control_point_uuid,
@@ -181,7 +175,7 @@ class BLEConnection:
                         "avg_bpm": 0,
                         "kcal": 0
                     }
-                    db_manager.save_local_session(data)
+                    self.db_manager.save_local_session(data)
                 avg_speed = sum(self.average["speed"]) / len(self.average["speed"]) if len(self.average["speed"]) > 0 else 0
                 avg_bpm = sum(self.average["bpm"]) / len(self.average["bpm"]) if len(self.average["bpm"]) > 0 else 0
                 avg_pace = self.convert_kmh_to_pace(avg_speed * 100)  # convert back to cm/s for the method
@@ -199,7 +193,7 @@ class BLEConnection:
                     "avg_bpm": avg_bpm,
                     "kcal": kcal
                 }
-                db_manager.save_local_session(data)         
+                self.db_manager.save_local_session(data)         
 
 
         # Inclination

@@ -12,14 +12,18 @@ import traceback
 ########################################################################
 
 class SQLiteConfig:
-    # Local SQLite config
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///ftms.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    def __init__(self, db_file):
+        # Local SQLite config with a dynamic database file
+        self.SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_file}"
+        self.SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 class MySQLConfig:
-    # Replace user, password, host, db_name with your MySQL credentials
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://Sql1818353:Gagagaga0761!@31.11.39.178/Sql1818353_4'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    def __init__(self, user, password, host, db_name):
+        # Dynamic MySQL configuration
+        self.SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{user}:{password}@{host}/{db_name}"
+        self.SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 ########################################################################
 # 2. Two SQLAlchemy Instances
@@ -64,19 +68,25 @@ class DBManagement:
     and contains the sync logic (parse_local_datetime, sync_session, etc.).
     """
 
-    def __init__(self):
+    def __init__(self, config):
         # -------------------------
         # Create the local (SQLite) Flask app
         # -------------------------
         self.app = Flask(__name__)
-        self.app.config.from_object(SQLiteConfig)
+        self.app.config.from_object(SQLiteConfig(config["localfile"]))
         local_db.init_app(self.app)
 
         # -------------------------
         # Create the remote (MySQL) Flask app
         # -------------------------
         self.remote_app = Flask(__name__)
-        self.remote_app.config.from_object(MySQLConfig)
+        self.remote_app.config.from_object(MySQLConfig(
+            user=config["Mysql"]["user"],
+            password=config["Mysql"]["password"],
+            host=config["Mysql"]["host"],
+            db_name=config["Mysql"]["database"]
+            )
+        )
         remote_db.init_app(self.remote_app)
 
         # -------------------------
