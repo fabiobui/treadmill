@@ -26,10 +26,10 @@
     "Database": {
         "localfile": "ftms.db",
         "Mysql": {
-            "host": "31.11.39.178",
-            "user": "Sql1818353",
+            "host": "31.11.39.248",
+            "user": "Sql1892912",
             "password": "Gagagaga0761!",
-            "database": "Sql1818353_4"
+            "database": "Sql1892912_4"
         }
     }
 }
