@@ -1,4 +1,5 @@
 /_notes/
+/_notes/**
 /__pycache__/
 /.vscode/
 /templates/_notes/
