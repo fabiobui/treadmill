@@ -149,11 +149,12 @@ def set_speed():
         print(f"Failed to set speed: {e}")
     
 
-@app.route("/exit_kiosk")
+@app.route("/exit_kiosk", methods=["GET", "POST"])
 def exit_kiosk():
     # Kills all chromium processes, effectively exiting kiosk mode
     import os
-    os.system("pkill chromium")
+    #os.system("pkill chromium")
+    os.system("pkill firefox")
     return "Exited kiosk by killing chromium!"
 
 @app.route('/screen_off', methods=['POST'])
