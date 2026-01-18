@@ -4,3 +4,10 @@
 /.vscode/
 /templates/_notes/
 Treadmill.xlsx
+# Environment variables
+.venv/
+.venv/**
+/instance/ftms.db
+/.venv/
+/.venv/**
+
