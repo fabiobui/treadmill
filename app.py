@@ -4,6 +4,8 @@
 # All data are sent to a Flask endpoint
 
 import threading
+import dbus
+import dbus.mainloop.glib
 import time
 import json
 import os
@@ -20,6 +22,9 @@ from ble_treadmill import TreadmillSimulate
 
 # Import the new BLEConnection class
 from ble_connection import BLEConnection
+
+# Configure D-Bus main loop BEFORE any D-Bus operations
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 
 # Load the JSON file
@@ -54,10 +59,14 @@ os.environ["XAUTHORITY"] = env_vars["XAUTHORITY"]  # Set XAUTHORITY
 # Create a Flask app
 
 # Instantiate your treadmill simulator
-treadmill = TreadmillSimulate(device_name=settings["device_name"])
+# hci1 = USB dongle for broadcast
+# Use device_name_hci1 for the broadcast name
+treadmill_name = settings.get("device_name_hci1", settings["device_name"])
+treadmill = TreadmillSimulate(device_name=treadmill_name, adapter="hci1")
 
 
 # Instantiate the BLEConnection class using values from the config
+# hci0 = internal Bluetooth for connection to real treadmill
 ble_connection = BLEConnection(
     treadmill=treadmill,  # Assuming treadmill is already defined in your code
     db_manager=db_manager,
@@ -65,6 +74,7 @@ ble_connection = BLEConnection(
     speed_characteristic_uuid=settings["speed_characteristic_uuid"],
     control_point_uuid=settings["control_point_uuid"],
     max_retries=settings["max_retries"],
+    adapter="hci0",  # Use internal Bluetooth for connection
     limits=limits
 )
 
@@ -189,6 +199,103 @@ def reset_bluetooth():
     print("Resetting Bluetooth interface...")
     os.system("rfkill block bluetooth")
     os.system("rfkill unblock bluetooth")
+    os.system("sudo systemctl restart bluetooth")
+
+
+def check_adapter_exists(adapter_path):
+    """
+    Check if a Bluetooth adapter exists
+    """
+    try:
+        bus = dbus.SystemBus()
+        obj = bus.get_object("org.bluez", adapter_path)
+        props = dbus.Interface(obj, "org.freedesktop.DBus.Properties")
+        # Try to get a property to verify the adapter exists
+        props.Get("org.bluez.Adapter1", "Address")
+        return True
+    except dbus.DBusException as e:
+        return False
+
+
+def set_adapter_name(adapter_path, name):
+    """
+    Set the Bluetooth name (Alias) for a specific adapter
+    """
+    try:
+        bus = dbus.SystemBus()
+        props = dbus.Interface(
+            bus.get_object("org.bluez", adapter_path),
+            "org.freedesktop.DBus.Properties"
+        )
+        props.Set("org.bluez.Adapter1", "Alias", dbus.String(name))
+        print(f"Set {adapter_path} name to: {name}")
+        return True
+    except dbus.DBusException as e:
+        print(f"Failed to set name for {adapter_path}: {e}")
+        return False
+
+
+def power_on_adapter(adapter_path="/org/bluez/hci1", retries=10, delay=0.5):
+    """
+    Power on the specified Bluetooth adapter
+    """
+    bus = dbus.SystemBus()
+    props = dbus.Interface(
+        bus.get_object("org.bluez", adapter_path),
+        "org.freedesktop.DBus.Properties"
+    )
+    
+    last_err = None
+    for _ in range(retries):
+        try:
+            # Check if already powered
+            powered = props.Get("org.bluez.Adapter1", "Powered")
+            if not powered:
+                props.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(True))
+                print(f"Powered on adapter {adapter_path}")
+                time.sleep(0.5)  # Give it time to power on
+            else:
+                print(f"Adapter {adapter_path} already powered on")
+            return True
+        except dbus.DBusException as e:
+            last_err = e
+            if "org.bluez.Error.Busy" in str(e):
+                time.sleep(delay)
+                continue
+            print(f"Error powering on adapter: {e}")
+            return False
+    print(f"Failed to power on adapter after {retries} retries")
+    return False
+
+
+def force_ble_advertising(adapter_path="/org/bluez/hci1", retries=10, delay=0.5):
+    """
+    Force BLE advertising on the specified adapter (default hci1 = USB dongle)
+    """
+    bus = dbus.SystemBus()
+    props = dbus.Interface(
+        bus.get_object("org.bluez", adapter_path),
+        "org.freedesktop.DBus.Properties"
+    )
+
+    # Intel/BlueZ spesso è "Busy" subito dopo reset/scan: retry
+    last_err = None
+    for _ in range(retries):
+        try:
+            # NON tocchiamo Powered -> evita org.bluez.Error.Busy
+            props.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(True))
+            props.Set("org.bluez.Adapter1", "Pairable", dbus.Boolean(True))
+            print(f"BLE advertising enabled on {adapter_path}")
+            return
+        except dbus.DBusException as e:
+            last_err = e
+            # Busy: aspetta e riprova
+            if "org.bluez.Error.Busy" in str(e):
+                time.sleep(delay)
+                continue
+            raise
+    raise last_err
+
 
 def start_flask():
     app.run(host='0.0.0.0', port=5000, debug=False)
@@ -198,9 +305,65 @@ def start_flask():
 ##############
 
 if __name__ == '__main__':
+    ble_thread = None
+    server_thread = None
+    broadcast_adapter = "hci1"  # Default to USB dongle
+    
     try:
         print("Starting BLE connection...")
         reset_bluetooth()
+        time.sleep(3)   # Wait longer after reset
+
+        # Check which adapters are available
+        print("\nChecking Bluetooth adapters...")
+        hci0_exists = check_adapter_exists("/org/bluez/hci0")
+        hci1_exists = check_adapter_exists("/org/bluez/hci1")
+        
+        print(f"  - hci0 (internal): {'found' if hci0_exists else 'NOT FOUND'}")
+        print(f"  - hci1 (USB dongle): {'found' if hci1_exists else 'NOT FOUND'}")
+        
+        if not hci0_exists:
+            print("\nERROR: hci0 not found! Cannot connect to treadmill.")
+            exit(1)
+        
+        # Determine which adapter to use for broadcast
+        if hci1_exists:
+            broadcast_adapter = "hci1"
+            print("\nConfiguration:")
+            print("  - hci0: for connection to real treadmill")
+            print("  - hci1: for broadcast of virtual treadmill")
+        else:
+            broadcast_adapter = "hci0"
+            print("\nWARNING: hci1 not found, using hci0 for both connection and broadcast")
+            print("Configuration:")
+            print("  - hci0: for BOTH connection and broadcast")
+        
+        # Power on hci0 (always needed)
+        print("\nPowering on adapters...")
+        if not power_on_adapter("/org/bluez/hci0"):
+            print("ERROR: Failed to power on hci0")
+            exit(1)
+        
+        # Set name for hci0
+        hci0_name = settings.get("device_name_hci0", "NUCUNTU-CLIENT")
+        set_adapter_name("/org/bluez/hci0", hci0_name)
+        
+        # Power on hci1 if it exists
+        if hci1_exists:
+            if not power_on_adapter("/org/bluez/hci1"):
+                print("Warning: Failed to power on hci1, falling back to hci0 for broadcast")
+                broadcast_adapter = "hci0"
+            else:
+                # Set name for hci1
+                hci1_name = settings.get("device_name_hci1", "NUCUNTU-TREADMILL")
+                set_adapter_name("/org/bluez/hci1", hci1_name)
+        
+        # Update treadmill configuration to use the correct adapter
+        treadmill.adapter = broadcast_adapter
+        
+        # Enable advertising on the broadcast adapter
+        print(f"\nEnabling BLE advertising on {broadcast_adapter}...")
+        force_ble_advertising(f"/org/bluez/{broadcast_adapter}")
 
         # Start BLE connection loop in a separate daemon thread
         ble_thread = threading.Thread(target=ble_connection.start_ble_loop, daemon=True)
@@ -235,10 +398,12 @@ if __name__ == '__main__':
         #    window.destroy()
         db_manager.shutdown()
         treadmill.stop()
-        server_thread.join()
+        if server_thread is not None:
+          server_thread.join()
         # Stop the asyncio loop & join the BLE thread
         ble_connection.disconnect()
         #ble_connection.ble_loop.stop()
         ble_connection.disconnect()
-        ble_thread.join()
+        if ble_thread is not None:
+          ble_thread.join()
         print("Main app done.")

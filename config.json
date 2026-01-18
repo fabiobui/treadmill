@@ -1,6 +1,8 @@
 {
     "Settings": {
-        "device_name": "ORANGE-PI3-ZERO",
+        "device_name": "NUCUNTU",
+        "device_name_hci0": "NUCUNTU-CLIENT",
+        "device_name_hci1": "NUCUNTU-TREADMILL",
         "address": "FF:71:4E:77:4B:DB",
         "speed_characteristic_uuid": "00002acd-0000-1000-8000-00805f9b34fb",
         "control_point_uuid": "00002ace-0000-1000-8000-00805f9b34fb",
@@ -15,7 +17,7 @@
     "EnvironmentVariables": {
         "PATH": "/usr/bin",  
         "DISPLAY": ":0",     
-        "XAUTHORITY": "/home/orangepi/.Xauthority"  
+        "XAUTHORITY": "/home/nucuntu/.Xauthority"  
     },
     "MQTT": {
         "server": "192.168.1.22",

@@ -4,6 +4,7 @@
 import dbus
 import dbus.mainloop.glib
 import dbus.service
+import time
 
 from gi.repository import GLib
 from random import randint
@@ -435,14 +436,16 @@ class PairingAgent(dbus.service.Object):
 # Registration Helpers
 ############################
 
-def find_adapter(bus):
-    """Return the path of the first adapter that has GattManager1."""
+def find_adapter(bus, adapter_name="hci1"):
+    """Return the path of the specified adapter that has GattManager1."""
     remote_om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, '/'),
                                DBUS_OM_IFACE)
     objects = remote_om.GetManagedObjects()
     for path, ifaces in objects.items():
         if GATT_MANAGER_IFACE in ifaces:
-            return path
+            # Check if this is the adapter we're looking for
+            if adapter_name in path:
+                return path
     return None
 
 def set_bluetooth_name(bus, adapter_path, name):
@@ -460,30 +463,36 @@ def set_bluetooth_name(bus, adapter_path, name):
 def setup_pairing_agent(bus):
     """Setup the pairing agent to disable pairing code."""
     print("Skipping pairing agent setup for no pairing requirement.")
-    """Setup the pairing agent and make it the default."""
-    agent = PairingAgent(bus)
-    manager = dbus.Interface(
-        bus.get_object("org.bluez", "/org/bluez"),
-        "org.bluez.AgentManager1"
-    )
-
-    # Register the pairing agent
-    manager.RegisterAgent(PairingAgent.AGENT_PATH, "KeyboardDisplay")
-    print("Pairing agent registered with capability: KeyboardDisplay")
-
-    # Set it as the default agent
-    manager.RequestDefaultAgent(PairingAgent.AGENT_PATH)
-    print("Pairing agent set as default")
+    # Commented out to avoid D-Bus main loop issues
+    # The pairing agent requires the main loop to be running
+    # but we call this before starting the main loop
+    return
+    
+    # """Setup the pairing agent and make it the default."""
+    # agent = PairingAgent(bus)
+    # manager = dbus.Interface(
+    #     bus.get_object("org.bluez", "/org/bluez"),
+    #     "org.bluez.AgentManager1"
+    # )
+    #
+    # # Register the pairing agent
+    # manager.RegisterAgent(PairingAgent.AGENT_PATH, "KeyboardDisplay")
+    # print("Pairing agent registered with capability: KeyboardDisplay")
+    #
+    # # Set it as the default agent
+    # manager.RequestDefaultAgent(PairingAgent.AGENT_PATH)
+    # print("Pairing agent set as default")
 
 def restart_adapter(bus, adapter_path):
     """Restart the Bluetooth adapter to apply changes."""
-    adapter = dbus.Interface(
+    props = dbus.Interface(
         bus.get_object("org.bluez", adapter_path),
-        "org.bluez.Adapter1"
+        "org.freedesktop.DBus.Properties"
     )
     try:
-        adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(False))
-        adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(True))
+        props.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(False))
+        time.sleep(0.5)
+        props.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(True))
         print("Bluetooth adapter restarted")
     except dbus.DBusException as e:
         print(f"Failed to restart adapter: {str(e)}")
@@ -514,9 +523,10 @@ class TreadmillSimulate:
     You can set speed/distance/energy/time using set_measures(...)
     Then the TreadmillDataCharacteristic will read them each second.
     """
-    def __init__(self, device_name="Test-Treadmill"):
+    def __init__(self, device_name="Test-Treadmill", adapter="hci1"):
         global mainloop
         self.device_name = device_name
+        self.adapter = adapter  # Bluetooth adapter to use for broadcast
         mainloop = None
 
         # "Live" treadmill data that the characteristic will read
@@ -554,13 +564,14 @@ class TreadmillSimulate:
 
     def start(self):
         global mainloop
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        # D-Bus main loop is now configured globally in app.py
         bus = dbus.SystemBus()
 
-        adapter_path = find_adapter(bus)
+        adapter_path = find_adapter(bus, self.adapter)
         if not adapter_path:
-            print("GattManager1 interface not found. Is bluetoothd running with --experimental?")
+            print(f"GattManager1 interface not found on {self.adapter}. Is bluetoothd running with --experimental?")
             return
+        print(f"Using adapter {self.adapter} ({adapter_path}) for broadcast")
 
         # Set the Bluetooth device name
         set_bluetooth_name(bus, adapter_path, self.device_name)

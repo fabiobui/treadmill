@@ -523,7 +523,7 @@ def main():
         return
 
     # Set the Bluetooth device name
-    set_bluetooth_name(bus, adapter_path, "ORANGE-PI3-ZERO")
+    set_bluetooth_name(bus, adapter_path, "NUCUNTU")
     restart_adapter(bus, adapter_path)
 
     # Set up the pairing agent

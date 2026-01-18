@@ -19,6 +19,7 @@ class BLEConnection:
         speed_characteristic_uuid="00002acd-0000-1000-8000-00805f9b34fb",
         control_point_uuid = "00002ace-0000-1000-8000-00805f9b34fb",
         max_retries=5,
+        adapter="hci0",  # Bluetooth adapter to use for connection (default hci0)
         limits={
             "speed_yellow": 10.0,
             "speed_red": 12.0,
@@ -32,6 +33,7 @@ class BLEConnection:
         self.speed_characteristic_uuid = speed_characteristic_uuid
         self.control_point_uuid = control_point_uuid,
         self.max_retries = max_retries
+        self.adapter = adapter  # Store the adapter to use
         self.limits = limits
 
         # Shared data
@@ -234,8 +236,8 @@ class BLEConnection:
         retries = 0
         while retries < self.max_retries:
             try:
-                print(f"Attempting to connect to treadmill (Attempt {retries + 1}/{self.max_retries})...")
-                async with BleakClient(self.address, timeout=10.0, loop=self.ble_loop) as client:
+                print(f"Attempting to connect to treadmill via {self.adapter} (Attempt {retries + 1}/{self.max_retries})...")
+                async with BleakClient(self.address, timeout=10.0, loop=self.ble_loop, adapter=self.adapter) as client:
                     self.client = client
                     print("Connected successfully!")
                     #await client.start_notify(self.control_point_uuid, self.notification_indicate)
