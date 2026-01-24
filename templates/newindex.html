@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap - Prebuilt Layout</title>
+    <title>Treadmill Dashboard</title>
 
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,9 +12,409 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="/static/script.js"></script>
 	<style>
-        .widget { font-size: 2rem; text-align: center; margin-top: 10px; }
-        .section-title { margin-top: 30px; font-weight: bold; }
-		.my-height { height: 10px; }
+        /* ============================================
+           CSS Variables for Modern Color Palette
+           ============================================ */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.25);
+            
+            --border-radius: 16px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --spacing-unit: 1rem;
+        }
+
+        /* ============================================
+           Global Styles & Typography
+           ============================================ */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        /* ============================================
+           Modern Widget Styles
+           ============================================ */
+        .widget {
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .widget:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* Add subtle animation to widget data */
+        .widget .h1, .widget .h2 {
+            transition: var(--transition-smooth);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .widget .h3 {
+            font-weight: 600;
+            opacity: 0.95;
+        }
+
+        .widget .h5 {
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* ============================================
+           Enhanced Bootstrap Background Classes
+           These maintain dynamic color changes from JS
+           but add gradients and improved styling
+           ============================================ */
+        .bg-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%) !important;
+        }
+
+        .bg-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%) !important;
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        .bg-secondary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+
+        .bg-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+        }
+
+        /* Special styling for BPM widget that changes dynamically */
+        #widget_bpm {
+            padding: 1rem;
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+        }
+
+        #widget_bpm.bg-success,
+        #widget_bpm.bg-warning,
+        #widget_bpm.bg-danger {
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ============================================
+           Table Styling
+           ============================================ */
+        .table {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-top: 30px;
+        }
+
+        .table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 1rem;
+            padding: 16px;
+        }
+
+        .table tbody tr {
+            transition: var(--transition-smooth);
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+            transform: scale(1.01);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+
+        /* ============================================
+           Modern Button Styles
+           ============================================ */
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: var(--transition-smooth);
+            border: none;
+            box-shadow: var(--shadow-md);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            border: none;
+            color: #2c3e50;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+            color: #2c3e50;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f45c43 0%, #eb3349 100%);
+        }
+
+        /* ============================================
+           Chart Container
+           ============================================ */
+        #speedChart {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
+        }
+
+        .section-title {
+            margin-top: 30px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.8rem;
+        }
+
+        /* ============================================
+           Responsive Design
+           ============================================ */
+        @media (max-width: 768px) {
+            .widget {
+                font-size: 1.5rem;
+                margin-top: 15px;
+                padding: 1.5rem !important;
+            }
+
+            .widget .h1 {
+                font-size: 2rem;
+            }
+
+            .widget .h2 {
+                font-size: 1.5rem;
+            }
+
+            .widget .h3 {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                margin-top: 20px;
+            }
+
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .table thead th {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .table td {
+                padding: 8px 6px;
+            }
+
+            .btn-lg {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 10px 0;
+            }
+
+            .widget {
+                font-size: 1.2rem;
+                margin-top: 10px;
+                padding: 1rem !important;
+            }
+
+            .widget .h1 {
+                font-size: 1.8rem;
+            }
+
+            .widget .h2 {
+                font-size: 1.3rem;
+            }
+
+            .widget .h3 {
+                font-size: 1rem;
+            }
+
+            .widget .h5 {
+                font-size: 0.85rem;
+            }
+
+            .btn-lg {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+
+            .table {
+                font-size: 0.75rem;
+            }
+
+            .table thead th {
+                padding: 8px 4px;
+                font-size: 0.75rem;
+            }
+
+            .table td {
+                padding: 6px 3px;
+            }
+        }
+
+        /* ============================================
+           Add subtle animations for data updates
+           ============================================ */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.85;
+            }
+        }
+
+        /* Subtle pulse only on main data values, optimized for performance */
+        #speed, #pace, #bpm, #energy {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        /* Stop animation on hover for better readability */
+        .widget:hover #speed,
+        .widget:hover #pace,
+        .widget:hover #bpm,
+        .widget:hover #energy {
+            animation: none;
+        }
+
+        /* ============================================
+           Footer Styling
+           ============================================ */
+        hr {
+            border-top: 2px solid rgba(0, 0, 0, 0.1);
+            margin: 40px 0;
+        }
+
+        /* Copyright section */
+        .text-center p {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .text-center a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+
+        .text-center a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* ============================================
+           Subtle hover effect for widgets
+           ============================================ */
+        .widget::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: var(--transition-smooth);
+            pointer-events: none;
+        }
+
+        .widget:hover::after {
+            opacity: 1;
+        }
+
+        /* ============================================
+           Improve spacing
+           ============================================ */
+        .row {
+            margin-bottom: 20px;
+        }
+
+        /* Legacy class */
+        .my-height { 
+            height: 10px; 
+        }
     </style>
   </head>
   <body>  
