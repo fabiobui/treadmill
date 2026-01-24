@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap - Prebuilt Layout</title>
+    <title>Treadmill Dashboard</title>
 
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -111,6 +111,19 @@
 
         .bg-dark {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+        }
+
+        /* Special styling for BPM widget that changes dynamically */
+        #widget_bpm {
+            padding: 1rem;
+            border-radius: 12px;
+            transition: var(--transition-smooth);
+        }
+
+        #widget_bpm.bg-success,
+        #widget_bpm.bg-warning,
+        #widget_bpm.bg-danger {
+            box-shadow: var(--shadow-md);
         }
 
         /* ============================================
@@ -235,6 +248,7 @@
             .widget {
                 font-size: 1.5rem;
                 margin-top: 15px;
+                padding: 1.5rem !important;
             }
 
             .widget .h1 {
@@ -251,10 +265,20 @@
 
             .section-title {
                 font-size: 1.5rem;
+                margin-top: 20px;
             }
 
             .table {
                 font-size: 0.85rem;
+            }
+
+            .table thead th {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .table td {
+                padding: 8px 6px;
             }
 
             .btn-lg {
@@ -264,17 +288,48 @@
         }
 
         @media (max-width: 576px) {
+            body {
+                padding: 10px 0;
+            }
+
             .widget {
                 font-size: 1.2rem;
+                margin-top: 10px;
+                padding: 1rem !important;
             }
 
             .widget .h1 {
                 font-size: 1.8rem;
             }
 
+            .widget .h2 {
+                font-size: 1.3rem;
+            }
+
+            .widget .h3 {
+                font-size: 1rem;
+            }
+
+            .widget .h5 {
+                font-size: 0.85rem;
+            }
+
             .btn-lg {
                 padding: 8px 16px;
                 font-size: 0.8rem;
+            }
+
+            .table {
+                font-size: 0.75rem;
+            }
+
+            .table thead th {
+                padding: 8px 4px;
+                font-size: 0.75rem;
+            }
+
+            .table td {
+                padding: 6px 3px;
             }
         }
 
