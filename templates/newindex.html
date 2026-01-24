@@ -341,16 +341,20 @@
                 opacity: 1;
             }
             50% {
-                opacity: 0.8;
+                opacity: 0.85;
             }
         }
 
-        .widget .h1 {
-            animation: pulse 2s ease-in-out infinite;
+        /* Subtle pulse only on main data values, optimized for performance */
+        #speed, #pace, #bpm, #energy {
+            animation: pulse 3s ease-in-out infinite;
         }
 
         /* Stop animation on hover for better readability */
-        .widget:hover .h1 {
+        .widget:hover #speed,
+        .widget:hover #pace,
+        .widget:hover #bpm,
+        .widget:hover #energy {
             animation: none;
         }
 
@@ -381,21 +385,22 @@
         }
 
         /* ============================================
-           Icon-like elements using CSS
+           Subtle hover effect for widgets
            ============================================ */
-        .widget::before {
+        .widget::after {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
             opacity: 0;
             transition: var(--transition-smooth);
+            pointer-events: none;
         }
 
-        .widget:hover::before {
+        .widget:hover::after {
             opacity: 1;
         }
 
