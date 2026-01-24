@@ -12,9 +12,417 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="/static/script.js"></script>
 	<style>
-        .widget { font-size: 2rem; text-align: center; margin-top: 10px; }
-        .section-title { margin-top: 30px; font-weight: bold; }
-		.my-height { height: 10px; }
+        /* ========== CSS Variables ========== */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 20px rgba(0,0,0,0.15);
+            --shadow-xl: 0 20px 40px rgba(0,0,0,0.2);
+            
+            --transition-fast: all 0.2s ease;
+            --transition-normal: all 0.3s ease;
+            --transition-slow: all 0.5s ease;
+            
+            --border-radius-sm: 0.5rem;
+            --border-radius-md: 0.75rem;
+            --border-radius-lg: 1rem;
+            
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+        }
+        
+        /* ========== Global Styles ========== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            padding-top: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+        }
+        
+        /* ========== Widget Styles ========== */
+        .widget { 
+            font-size: 2rem; 
+            text-align: center; 
+            margin-top: 10px;
+            border-radius: var(--border-radius-lg) !important;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .widget:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        /* Modern gradients for widgets while maintaining base classes */
+        .widget.bg-success {
+            background: var(--success-gradient) !important;
+            position: relative;
+        }
+        
+        .widget.bg-primary {
+            background: var(--primary-gradient) !important;
+        }
+        
+        .widget.bg-warning {
+            background: var(--warning-gradient) !important;
+        }
+        
+        .widget.bg-danger {
+            background: var(--danger-gradient) !important;
+        }
+        
+        .widget.bg-secondary {
+            background: var(--secondary-gradient) !important;
+        }
+        
+        /* Subtle animation overlay for widgets */
+        .widget::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: var(--transition-slow);
+        }
+        
+        .widget:hover::before {
+            opacity: 1;
+        }
+        
+        /* Pulse animation for real-time data */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+        
+        #pace, #speed, #bpm, #energy {
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Fade-in animation for updating data */
+        @keyframes fadeIn {
+            from {
+                opacity: 0.5;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        #running-time, #total-distance {
+            animation: fadeIn 0.5s ease;
+            font-weight: 600;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        /* ========== Typography ========== */
+        .h1, h1 {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .h2, h2 {
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        
+        .h3, h3 {
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .h4, h4 {
+            font-weight: 600;
+        }
+        
+        .h5, h5 {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .section-title { 
+            margin-top: 30px; 
+            font-weight: bold;
+            font-size: 2rem;
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        /* ========== Table Styles ========== */
+        .table {
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            background: white;
+        }
+        
+        .table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            transition: var(--transition-fast);
+        }
+        
+        .table tbody tr {
+            transition: var(--transition-fast);
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .table-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        
+        /* ========== Button Styles ========== */
+        .btn {
+            border-radius: var(--border-radius-md);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: var(--transition-normal);
+            border: none;
+            box-shadow: var(--shadow-md);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #fee140 0%, #fa709a 100%);
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+        }
+        
+        /* ========== Chart Section ========== */
+        canvas {
+            background: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        /* ========== Separator ========== */
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        /* ========== Spacing Utilities ========== */
+		.my-height { 
+            height: 10px; 
+        }
+        
+        .row {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        /* ========== Responsive Design ========== */
+        @media (max-width: 768px) {
+            .widget {
+                font-size: 1.5rem;
+                margin-top: var(--spacing-sm);
+                padding: var(--spacing-md) !important;
+            }
+            
+            .h1 {
+                font-size: 2rem;
+            }
+            
+            .h2 {
+                font-size: 1.75rem;
+            }
+            
+            .h3 {
+                font-size: 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+                margin-top: var(--spacing-md);
+            }
+            
+            .btn-lg {
+                padding: 0.5rem 1.5rem;
+                font-size: 1rem;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+            }
+            
+            .table thead th,
+            .table tbody td {
+                padding: 0.5rem;
+            }
+            
+            canvas {
+                padding: var(--spacing-sm);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .widget {
+                font-size: 1.25rem;
+            }
+            
+            .h1 {
+                font-size: 1.75rem;
+            }
+            
+            .h2 {
+                font-size: 1.5rem;
+            }
+            
+            .h3 {
+                font-size: 1.25rem;
+            }
+            
+            .btn-lg {
+                padding: 0.4rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .col-3 {
+                margin-bottom: var(--spacing-sm);
+            }
+        }
+        
+        /* ========== Additional Enhancements ========== */
+        /* Smooth color transitions for dynamic changes */
+        #widget_pace,
+        #widget_bpm {
+            transition: background 0.5s ease, color 0.5s ease !important;
+        }
+        
+        /* Footer styling */
+        .text-center a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition-fast);
+        }
+        
+        .text-center a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        /* Loading animation for initial state */
+        @keyframes shimmer {
+            0% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.5;
+            }
+        }
+        
+        /* Card improvements */
+        .rounded {
+            border-radius: var(--border-radius-lg) !important;
+        }
+        
+        .p-4 {
+            padding: var(--spacing-lg) !important;
+        }
+        
+        /* Ensure text remains readable on all backgrounds */
+        .text-white {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .text-dark {
+            text-shadow: none;
+        }
     </style>
   </head>
   <body>  
